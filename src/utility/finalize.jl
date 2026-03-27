@@ -2,7 +2,9 @@ const simple_scheme = Union{TRG, ATRG, HOTRG}
 
 # 1x1 unitcell finalize
 function finalize!(scheme::simple_scheme)
-    n = norm(@tensor scheme.T[1 2; 2 1])
+    # n = norm(@tensor scheme.T[1 2; 2 1])
+    n = norm(@planar scheme.T[-1 2; 3 4] * τ[2 -1; 4 3])
+    # @show n
     scheme.T /= n
     return n
 end

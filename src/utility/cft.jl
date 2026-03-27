@@ -2,6 +2,34 @@ function next_τ(τ)
     return (τ - 1) / (τ + 1)
 end
 
+# only tested for one-site unit cell, and for Z2 and IsingAnyon Ising models
+function cft_data_onesite(scheme::TNRScheme; v = 1, is_real = true)
+    @planar T[-2; -3] := scheme.T[-1 2; 3 -3] * τ[2 -1; -2 3]
+
+    T = permute(T, ((1,), (2,)))
+    D, _ = eig_full(T)
+
+    data = zeros(ComplexF64, Int(dim(space(D, 1))))
+
+    i = 1
+    for (_, b) in blocks(D)
+        for I in LinearAlgebra.diagind(b)
+            data[i] = b[I]
+            i += 1
+        end
+    end
+
+    data = sort(data; by = x -> abs(x), rev = true) # sorting by magnitude
+    data = filter(x -> real(x) > 0, data) # filtering out negative real values
+    data = filter(x -> abs(x) > 1.0e-12, data) # filtering out small values
+
+    if is_real
+        data = real(data)
+    end
+
+    return (1 / (2π * v)) * log.(data[1] ./ data)
+end
+
 function cft_data(scheme::TNRScheme; v = 1, unitcell = 1, is_real = true)
     # make the indices
     indices = [[i, -i, -(i + unitcell), i + 1] for i in 1:unitcell]
